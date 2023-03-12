@@ -1,0 +1,7 @@
+.idea/
+cache/
+/*.yml
+__pycache__/
+lib/nms/build/
+lib/nms/dist/
+lib/nms/src/nms.egg-info/

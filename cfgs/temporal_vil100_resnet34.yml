@@ -1,0 +1,91 @@
+# Training settings
+val_every: 1000
+seed: 0
+model:
+  name: LaneATTTime
+  parameters:
+    backbone: resnet34
+    time_window_size: &time_window_size 3
+    S: &S 72
+    topk_anchors: 1000
+    anchors_freq_path: data/vil100_anchors_freq.pt
+    img_h: &img_h 360
+    img_w: &img_w 640
+    cls_pred_type: direct
+batch_size: 8
+epochs: 50
+loss_parameters:
+  cat_cls_loss_weight: 0.01
+train_parameters:
+  conf_threshold:
+  nms_thres: 15.
+  nms_topk: 3000
+test_parameters:
+  conf_threshold: 0.25
+  nms_thres: 35
+  nms_topk: &max_lanes 6
+optimizer:
+  name: Adam
+  parameters:
+    lr: 0.0003
+lr_scheduler:
+  name: CosineAnnealingLR
+  parameters:
+    T_max: 50000 # 100 * 1000 iterations
+
+# Dataset settings
+datasets:
+  train:
+    type: TemporalLaneDataset
+    parameters:
+      S: *S
+      dataset: vil100
+      split: train
+      img_size: [*img_h, *img_w]
+      max_lanes: *max_lanes
+      normalize: false
+      aug_chance: 1.0
+      time_window_size: *time_window_size
+      augmentations:
+      - name: Affine
+        parameters:
+          translate_px:
+            x: !tuple [-25, 25]
+            y: !tuple [-10, 10]
+          rotate: !tuple [-6, 6]
+          scale: !tuple [0.85, 1.15]
+      - name: HorizontalFlip
+        parameters:
+          p: 0.5
+      root: ../datasets/VIL100
+
+  test:
+    type: TemporalLaneDataset
+    parameters:
+      S: *S
+      dataset: vil100
+      split: test
+      img_size: [*img_h, *img_w]
+      max_lanes: *max_lanes
+      normalize: false
+      eval_exec_path: ../MMA-Net/evaluation-cls/culane/culane_evaluator
+      anno_txt_path: ../MMA-Net/evaluation-cls/txt/anno_txt/
+      aug_chance: 0
+      time_window_size: *time_window_size
+      augmentations:
+      root: ../datasets/VIL100
+
+
+  val:
+    type: TemporalLaneDataset
+    parameters:
+      S: *S
+      dataset: vil100
+      split: test
+      img_size: [*img_h, *img_w]
+      max_lanes: *max_lanes
+      normalize: false
+      aug_chance: 0
+      time_window_size: *time_window_size
+      augmentations:
+      root: ../datasets/VIL100
